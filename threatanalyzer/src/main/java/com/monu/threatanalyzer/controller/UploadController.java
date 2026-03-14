@@ -8,6 +8,8 @@ import org.springframework.web.multipart.MultipartFile;
 @RestController
 @RequestMapping("/api")
 
+
+//to implement a ZIP file uploading API.
 public class UploadController {
     @Autowired
     private StorageServices storageServices;
@@ -24,6 +26,16 @@ public class UploadController {
         response.put("scanId", scanId);
         response.put("status", "UPLOADED");
 
+        return response;
+    }
+    //to implement zip file download via URL API
+    @PostMapping("/upload/github")
+    public Map<String, String> uploadwithurl(@RequestParam String repoUrl){
+        String scanId = storageServices.generateScanId();
+        storageServices.urlDownload(repoUrl, scanId);
+        Map<String, String> response = new HashMap<>();
+        response.put("scanId", scanId);
+        response.put("status", "UPLOADED");
         return response;
     }
 }

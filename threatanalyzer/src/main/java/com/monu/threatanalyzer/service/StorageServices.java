@@ -42,5 +42,25 @@ public class StorageServices {
                 .toString()
                 .substring(0, 8);
     }
+    //to download file with given URl
+    public String urlDownload(String repoUrl, String scanId){
+        String[] branches = {"main", "master"};
+        for (String branch : branches) {// to try both main and master for branches.
+            try {
+                String zipUrl = repoUrl + "/archive/refs/heads/" + branch + ".zip";
+                java.net.URL url = new java.net.URL(zipUrl);
+                java.io.InputStream in = url.openStream();
+                Path filePath = uploadPath.resolve(scanId + ".zip");
+                Files.copy(in, filePath);
+                in.close();
+                System.out.println("Downloaded repo Zip: " + filePath.toAbsolutePath());
+                return filePath.toString();
+            } catch (Exception e) {
+                System.out.println("branch failed:" + branch);
+            }
+        }
+        throw new RuntimeException("Failed to download zip");//user has named his branch differently(need to create another feature for that too :)
+        
+    }
     
 }
