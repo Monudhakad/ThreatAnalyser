@@ -25,10 +25,11 @@ public class StorageServices {
         }
     }
 
-    // to accept file and scan id for file and then return the file path
+    // to accept file and scan id for file and then return the file path with creating separate workspace for every file.
     public String saveZip(byte[] data, String scanId){
         try{
-            Path filepath = uploadPath.resolve(scanId + ".zip");
+            Path scanFolder = scanWorkspace(scanId);
+            Path filepath = scanFolder.resolve(scanId + ".zip");
             Files.write(filepath, data);
             System.out.println("ZIP saved at: "+ filepath.toAbsolutePath());
             return filepath.toString();
@@ -61,6 +62,16 @@ public class StorageServices {
         }
         throw new RuntimeException("Failed to download zip");//user has named his branch differently(need to create another feature for that too :)
         
+    }
+    //to create separate folder for every zip.
+    public Path scanWorkspace(String scanId){
+        try {
+            Path scanFolder = uploadPath.resolve(scanId);
+            Files.createDirectories(scanFolder);
+            return scanFolder;
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to create Workspace");
+        }
     }
     
 }
