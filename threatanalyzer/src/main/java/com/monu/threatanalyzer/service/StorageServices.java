@@ -51,10 +51,12 @@ public class StorageServices {
                 String zipUrl = repoUrl + "/archive/refs/heads/" + branch + ".zip";
                 java.net.URL url = new java.net.URL(zipUrl);
                 java.io.InputStream in = url.openStream();
-                Path filePath = uploadPath.resolve(scanId + ".zip");
+                Path scanFolder = scanWorkspace(scanId);
+                Path filePath = scanFolder.resolve(scanId + ".zip");
                 Files.copy(in, filePath);
                 in.close();
                 System.out.println("Downloaded repo Zip: " + filePath.toAbsolutePath());
+                extractZip(scanId);
                 return filePath.toString();
             } catch (Exception e) {
                 System.out.println("branch failed:" + branch);
@@ -71,6 +73,31 @@ public class StorageServices {
             return scanFolder;
         } catch (Exception e) {
             throw new RuntimeException("Failed to create Workspace");
+        }
+    }
+
+    //to add an unzipping function to unzip the file given.
+    public void extractZip(String scanId){
+        try {
+            Path scanFolder = uploadPath.resolve(scanId);
+            Path extractPath = scanFolder.resolve("extracted");
+            Files.createDirectories(extractPath);
+            Path zipFilePath = scanFolder.resolve(scanId + ".zip");
+            java.util.zip.ZipInputStream zis = new java.util.zip.ZipInputStream(new java.io.FileInputStream(zipFilePath.toFile()));
+            java.util.zip.ZipEntry entry;
+            while ((entry = zis.getNextEntry())!=null) {
+                Path filepPath = extractPath.resolve(entry.getName());
+                if (entry.isDirectory()) {
+                    Files.createDirectories(filepPath);
+                }else{
+                    Files.createDirectories(filepPath.getParent());
+                    Files.copy(zis, filepPath);
+                }
+            }
+            zis.close();
+            System.out.println("Project extracted for scanId:" + scanId);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to extract zip file", e);
         }
     }
     
