@@ -6,10 +6,14 @@ import java.nio.file.Files;
 import org.springframework.stereotype.Service;
 import jakarta.annotation.PostConstruct;
 
-@Service 
+import org.springframework.beans.factory.annotation.Autowired;
 
+@Service
 public class StorageServices {
     private final Path uploadPath = Paths.get("workspace/uploads");
+
+    @Autowired
+    private  ScanService scanService;
 
     @PostConstruct
     //to create a directory to save the file.
@@ -32,6 +36,8 @@ public class StorageServices {
             Path filepath = scanFolder.resolve(scanId + ".zip");
             Files.write(filepath, data);
             System.out.println("ZIP saved at: "+ filepath.toAbsolutePath());
+            extractZip(scanId);
+            scanService.startScan(scanId);
             return filepath.toString();
         } catch(Exception e){
             throw new RuntimeException("Failed to save the zip file");
@@ -57,6 +63,7 @@ public class StorageServices {
                 in.close();
                 System.out.println("Downloaded repo Zip: " + filePath.toAbsolutePath());
                 extractZip(scanId);
+                scanService.startScan(scanId);
                 return filePath.toString();
             } catch (Exception e) {
                 System.out.println("branch failed:" + branch);
@@ -100,5 +107,7 @@ public class StorageServices {
             throw new RuntimeException("Failed to extract zip file", e);
         }
     }
+
+    
     
 }
