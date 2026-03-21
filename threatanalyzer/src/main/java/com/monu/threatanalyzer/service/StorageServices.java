@@ -7,13 +7,16 @@ import org.springframework.stereotype.Service;
 import jakarta.annotation.PostConstruct;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import com.monu.threatanalyzer.service.ScanService;
 
 @Service
 public class StorageServices {
     private final Path uploadPath = Paths.get("workspace/uploads");
 
-    @Autowired
-    private  ScanService scanService;
+    private final ScanService scanService;
+    public StorageServices(ScanService scanService){
+        this.scanService = scanService;
+    }
 
     @PostConstruct
     //to create a directory to save the file.
