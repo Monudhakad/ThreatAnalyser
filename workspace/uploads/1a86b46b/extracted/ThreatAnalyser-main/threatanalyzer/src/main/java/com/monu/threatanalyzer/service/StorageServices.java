@@ -54,7 +54,7 @@ public class StorageServices {
     }
     //to download file with given URl
     public String urlDownload(String repoUrl, String scanId){
-        String[] branches = {"main", "master", "develop"};
+        String[] branches = {"main", "master"};
         for (String branch : branches) {// to try both main and master for branches.
             try {
                 String zipUrl = repoUrl + "/archive/refs/heads/" + branch + ".zip";
