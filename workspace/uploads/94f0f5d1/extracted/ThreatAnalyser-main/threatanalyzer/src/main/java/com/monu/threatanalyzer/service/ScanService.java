@@ -40,22 +40,6 @@ public class ScanService {
         } catch (Exception e) {
             throw new RuntimeException("Scan failed", e);
         }
-        int score = 0;
-        for (ThreatFinding f : result.getFindings()) {
-            switch ( f.getseverity()) {
-                case "Critical": score+= 40;
-                case "High": score+= 30;
-                case "Medium": score+= 20;
-                case "Low": score+= 10;
-                
-            }
-        }
-        result.setThreatScore(score);
-        if (score>=70) {
-            result.setRiskLevel("High");
-        }else if (score>=40) {
-            result.setRiskLevel("Medium");
-        }else{result.setRiskLevel("low");}
         return result;
     }
     private void checkpomDependencies(Path pomPath, Scanresult result){

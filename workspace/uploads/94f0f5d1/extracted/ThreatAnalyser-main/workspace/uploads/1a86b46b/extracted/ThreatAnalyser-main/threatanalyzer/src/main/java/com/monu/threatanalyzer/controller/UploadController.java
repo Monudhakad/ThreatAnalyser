@@ -1,6 +1,4 @@
 package com.monu.threatanalyzer.controller;
-import com.monu.threatanalyzer.model.Scanresult;
-import com.monu.threatanalyzer.service.ScanService;
 import com.monu.threatanalyzer.service.StorageServices;
 import java.util.HashMap;
 import java.util.Map;
@@ -15,8 +13,6 @@ import org.springframework.web.multipart.MultipartFile;
 public class UploadController {
     @Autowired
     private StorageServices storageServices;
-    @Autowired
-    private ScanService scanService;
     @PostMapping("/upload")
     public Map<String, String> uploadZip(@RequestParam("file") MultipartFile file) {
         String scanId = storageServices.generateScanId();
@@ -25,10 +21,6 @@ public class UploadController {
         } catch (Exception e) {
             throw new RuntimeException("upload failed");
         }
-        Scanresult r = scanService.startScan(scanId);
-        System.out.println("Total findings: "+ r.getFindings().size());
-        System.out.println("Risk Score: " + r.getThreatScore());
-        System.out.println("Risk Level: " + r.getRiskLevel());
 
         Map<String,String> response=new HashMap<>();
         response.put("scanId", scanId);
@@ -41,10 +33,6 @@ public class UploadController {
     public Map<String, String> uploadwithurl(@RequestParam String repoUrl){
         String scanId = storageServices.generateScanId();
         storageServices.urlDownload(repoUrl, scanId);
-        Scanresult r = scanService.startScan(scanId);
-        System.out.println("Total findings: "+ r.getFindings().size());
-        System.out.println("Risk Score: " + r.getThreatScore());
-        System.out.println("Risk Level: " + r.getRiskLevel());
         Map<String, String> response = new HashMap<>();
         response.put("scanId", scanId);
         response.put("status", "UPLOADED");

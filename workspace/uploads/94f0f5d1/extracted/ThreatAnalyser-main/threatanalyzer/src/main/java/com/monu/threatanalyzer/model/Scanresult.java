@@ -16,12 +16,4 @@ public class Scanresult {
     public List<ThreatFinding> getFindings() {
         return findings;
     }
-    private int threatScore;
-    private String riskLevel;
-
-    public int getThreatScore() {return threatScore;}
-    public void setThreatScore(int threatScore){this.threatScore = threatScore;}
-
-    public String getRiskLevel(){return riskLevel;}
-    public void setRiskLevel(String riskLevel){this.riskLevel = riskLevel;}
 }

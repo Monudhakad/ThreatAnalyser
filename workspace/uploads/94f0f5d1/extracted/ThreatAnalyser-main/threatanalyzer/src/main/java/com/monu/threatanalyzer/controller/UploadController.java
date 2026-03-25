@@ -27,8 +27,6 @@ public class UploadController {
         }
         Scanresult r = scanService.startScan(scanId);
         System.out.println("Total findings: "+ r.getFindings().size());
-        System.out.println("Risk Score: " + r.getThreatScore());
-        System.out.println("Risk Level: " + r.getRiskLevel());
 
         Map<String,String> response=new HashMap<>();
         response.put("scanId", scanId);
@@ -43,8 +41,6 @@ public class UploadController {
         storageServices.urlDownload(repoUrl, scanId);
         Scanresult r = scanService.startScan(scanId);
         System.out.println("Total findings: "+ r.getFindings().size());
-        System.out.println("Risk Score: " + r.getThreatScore());
-        System.out.println("Risk Level: " + r.getRiskLevel());
         Map<String, String> response = new HashMap<>();
         response.put("scanId", scanId);
         response.put("status", "UPLOADED");
