@@ -2,13 +2,14 @@ package com.monu.threatanalyzer.controller;
 import com.monu.threatanalyzer.model.Scanresult;
 import com.monu.threatanalyzer.service.ScanService;
 import com.monu.threatanalyzer.service.StorageServices;
+import com.monu.threatanalyzer.util.PdfReportGenerator;
+
 import java.util.HashMap;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 
 @RestController
 @RequestMapping("/api")
@@ -64,5 +65,23 @@ public class UploadController {
     public String getMethodName(@RequestParam String param) {
         return new String();
     }
+    @GetMapping("/scan/{scanId}/report/pdf")
+    public ResponseEntity<byte[]> getPdfReport(@PathVariable String scanId) {
+
+        Scanresult result = scanService.getScanResult(scanId);
+
+        if (result == null) {
+        throw new RuntimeException("Scan not found");
+        }
+
+        byte[] pdf = PdfReportGenerator.generate(result);
+
+        return ResponseEntity.ok()
+            .header("Content-Type", "application/pdf")
+            .header("Content-Disposition", "attachment; filename=report.pdf")
+            .body(pdf);
+}
+    
+
     
 }
