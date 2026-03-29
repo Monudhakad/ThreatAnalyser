@@ -29,9 +29,9 @@ public class PdfReportGenerator {
 
             for (ThreatFinding f : result.getFindings()) {
                 document.add(new Paragraph(
-                        "- " + f.gettype()
-                        + " | " + f.getseverity()
-                        + " | " + f.getfile()
+                        "- " + f.getType()
+                        + " | " + f.getSeverity()
+                        + " | " + f.getFile()
                 ));
             }
 

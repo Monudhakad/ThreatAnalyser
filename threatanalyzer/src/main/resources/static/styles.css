@@ -75,6 +75,21 @@ button:hover{
     background:#0ea5e9;
 }
 
+.download-btn{
+    display:inline-block;
+    margin-top:16px;
+    padding:10px 18px;
+    background:#38bdf8;
+    color:#020617;
+    border-radius:6px;
+    text-decoration:none;
+    font-weight:bold;
+}
+
+.download-btn:hover{
+    background:#0ea5e9;
+}
+
 /* # TABLE */
 table{
     width:100%;

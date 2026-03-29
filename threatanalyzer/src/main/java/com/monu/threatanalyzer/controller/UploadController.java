@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -39,6 +40,26 @@ public class UploadController {
         response.put("status", "UPLOADED");
 
         return response;
+    }
+    @PostMapping("/scan")
+    public String scanFromWeb(@RequestParam String repoUrl, Model model) {
+
+        String scanId = storageServices.generateScanId();
+
+        storageServices.urlDownload(repoUrl, scanId);
+
+        Scanresult result = scanService.startScan(scanId);
+
+        model.addAttribute("result", result);
+
+        return "result";
+    }
+
+
+
+    @GetMapping("/")
+    public String home() {
+        return "index";
     }
     //to implement zip file download via URL API
     @PostMapping("/upload/github")

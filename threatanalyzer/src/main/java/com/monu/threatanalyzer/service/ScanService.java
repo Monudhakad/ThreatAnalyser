@@ -43,12 +43,11 @@ public class ScanService {
         }
         int score = 0;
         for (ThreatFinding f : result.getFindings()) {
-            switch ( f.getseverity()) {
-                case "Critical": score+= 40;
-                case "High": score+= 30;
-                case "Medium": score+= 20;
-                case "Low": score+= 10;
-                
+            switch (f.getSeverity()) {
+                case "Critical": score += 40; break;
+                case "High": score += 30; break;
+                case "Medium": score += 20; break;
+                case "Low": score += 10; break;
             }
         }
         result.setThreatScore(score);
