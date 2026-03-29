@@ -7,9 +7,6 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-
 @RestController
 @RequestMapping("/api")
 
@@ -53,16 +50,4 @@ public class UploadController {
         response.put("status", "UPLOADED");
         return response;
     }
-    @GetMapping("/scan/{scanId}/report")
-    public Scanresult getReport(@PathVariable String scanId){
-        Scanresult result = scanService.getScanResult(scanId);
-        if(result == null){
-        throw new RuntimeException("Scan not Found");
-        }
-        return result;
-    }
-    public String getMethodName(@RequestParam String param) {
-        return new String();
-    }
-    
 }

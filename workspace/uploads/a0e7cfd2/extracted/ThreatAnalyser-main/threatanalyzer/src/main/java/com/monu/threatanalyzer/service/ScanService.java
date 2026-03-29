@@ -3,8 +3,6 @@ package com.monu.threatanalyzer.service;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 import org.springframework.stereotype.Service;
 
@@ -57,8 +55,6 @@ public class ScanService {
         }else if (score>=40) {
             result.setRiskLevel("Medium");
         }else{result.setRiskLevel("low");}
-
-        scanStore.put(scanId, result);
         return result;
     }
     private void checkpomDependencies(Path pomPath, Scanresult result){
@@ -78,9 +74,5 @@ public class ScanService {
             result.addFindings(new ThreatFinding("Vulnerable_dependency", pomPath.toString(), "Critical"));
         }
     }
-    public Scanresult getScanResult(String scanId){
-        return scanStore.get(scanId);
-    }
-    private Map<String, Scanresult> scanStore = new ConcurrentHashMap<>();
     
 }
