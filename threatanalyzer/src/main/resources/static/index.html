@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Threat Finder</title>
+
+<!-- # LINK CSS -->
+<link rel="stylesheet" href="styles.css">
+<script src = "/script.js"></script>
+
+</head>
+
+<body>
+
+<!-- # HEADER -->
+<div class="header">
+    <img src="https://cdn-icons-png.flaticon.com/512/3064/3064197.png" class="logo">
+    <div class="title">Threat Finder</div>
+</div>
+
+<div class="container">
+
+    <h1>AI Threat Analyzer</h1>
+    <h2>Smart Security Detection for Your Code</h2>
+
+    <div class="description">
+        Upload your project or provide a GitHub repository link to detect vulnerabilities.
+    </div>
+
+    <div class="main-grid">
+
+        <!-- # UPLOAD -->
+        <div id="upload" class="card">
+            <h3>Upload Project</h3>
+
+            <input type="file" id="fileInput">
+
+            <p>OR</p>
+
+            <input type="text" id="githubInput" placeholder="Paste GitHub repo link">
+
+            <br><br>
+
+            <button onclick="analyze()">Start Analysis</button>
+        </div>
+
+        <!-- # INSIGHTS -->
+        <div class="card insights">
+            <h3>What We Detect</h3>
+            <ul>
+                <li>Hardcoded passwords</li>
+                <li>Insecure APIs</li>
+                <li>Weak encryption</li>
+                <li>Configuration issues</li>
+                <li>Unsafe coding patterns</li>
+            </ul>
+
+            <h3>Why It Matters</h3>
+            <ul>
+                <li>Prevents data breaches</li>
+                <li>Improves security</li>
+                <li>Saves time</li>
+                <li>Ensures safe deployment</li>
+            </ul>
+        </div>
+
+    </div>
+
+    <!-- # LOADING -->
+    <div id="loading" class="card hidden">
+        <h3>Analyzing Project...</h3>
+    </div>
+
+    <!-- # REPORT -->
+    <div id="report" class="card hidden">
+        <h3>Threat Report</h3>
+        <table>
+            <tr>
+                <th>File</th>
+                <th>Threat</th>
+                <th>Severity</th>
+                <th>Line</th>
+            </tr>
+            <tr>
+                <td>config.java</td>
+                <td>Hardcoded Password</td>
+                <td class="high">High</td>
+                <td>23</td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="footer">
+        Prototype UI for demonstration. Final system may differ.
+    </div>
+
+</div>
+
+<!-- # LINK JS -->
+<script src="script.js"></script>
+
+</body>
+</html>

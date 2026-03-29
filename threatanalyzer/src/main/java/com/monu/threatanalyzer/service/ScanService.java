@@ -9,7 +9,6 @@ import org.springframework.stereotype.Service;
 import com.monu.threatanalyzer.model.Scanresult;
 import com.monu.threatanalyzer.model.ThreatFinding;
 
-import ch.qos.logback.core.net.SyslogOutputStream;
 
 @Service
 public class ScanService {
