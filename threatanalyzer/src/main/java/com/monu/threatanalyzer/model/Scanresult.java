@@ -24,4 +24,13 @@ public class Scanresult {
 
     public String getRiskLevel(){return riskLevel;}
     public void setRiskLevel(String riskLevel){this.riskLevel = riskLevel;}
+
+    private ProjectMetadata metadata;
+    public ProjectMetadata getMetadata() {
+    return metadata;
+    }
+
+    public void setMetadata(ProjectMetadata metadata) {
+    this.metadata = metadata;
+    }
 }
