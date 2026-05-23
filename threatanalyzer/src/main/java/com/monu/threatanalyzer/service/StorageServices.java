@@ -40,7 +40,6 @@ public class StorageServices {
             Files.write(filepath, data);
             System.out.println("ZIP saved at: "+ filepath.toAbsolutePath());
             extractZip(scanId);
-            scanService.startScan(scanId);
             return filepath.toString();
         } catch(Exception e){
             throw new RuntimeException("Failed to save the zip file");
@@ -66,7 +65,6 @@ public class StorageServices {
                 in.close();
                 System.out.println("Downloaded repo Zip: " + filePath.toAbsolutePath());
                 extractZip(scanId);
-                scanService.startScan(scanId);
                 return filePath.toString();
             } catch (Exception e) {
                 System.out.println("branch failed:" + branch);

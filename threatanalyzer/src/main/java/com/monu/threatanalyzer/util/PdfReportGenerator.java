@@ -35,6 +35,12 @@ public class PdfReportGenerator {
                 ));
             }
 
+            document.add(new Paragraph(" "));
+            document.add(new Paragraph("Detected Technologies"));
+            for (TechnologyFinding t : result.getTechnologies()) {
+                document.add(new Paragraph("- " + t.getTechnology()));
+            }
+
             document.close();
 
             return out.toByteArray();

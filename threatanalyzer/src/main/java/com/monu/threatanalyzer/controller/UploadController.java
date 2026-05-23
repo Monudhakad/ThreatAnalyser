@@ -30,10 +30,11 @@ public class UploadController {
         } catch (Exception e) {
             throw new RuntimeException("upload failed");
         }
-        Scanresult r = scanService.startScan(scanId);
-        System.out.println("Total findings: "+ r.getFindings().size());
-        System.out.println("Risk Score: " + r.getThreatScore());
-        System.out.println("Risk Level: " + r.getRiskLevel());
+        Scanresult r = scanService.startScan(
+                scanId,
+                "ZIP_UPLOAD",
+                "LOCAL_UPLOAD"
+        );
 
         Map<String,String> response=new HashMap<>();
         response.put("scanId", scanId);
@@ -44,11 +45,22 @@ public class UploadController {
     @PostMapping("/scan")
     public String scanFromWeb(@RequestParam String repoUrl, Model model) {
 
+        if (repoUrl == null || repoUrl.isBlank()) {
+            throw new RuntimeException("Repository URL cannot be empty");
+        }
+        if (!repoUrl.contains("github.com")) {
+            throw new RuntimeException("Only GitHub URLs are supported");
+        }
+
         String scanId = storageServices.generateScanId();
 
         storageServices.urlDownload(repoUrl, scanId);
 
-        Scanresult result = scanService.startScan(scanId);
+        Scanresult result = scanService.startScan(
+                scanId,
+                "GITHUB",
+                repoUrl
+        );
 
         model.addAttribute("result", result);
 
@@ -64,12 +76,20 @@ public class UploadController {
     //to implement zip file download via URL API
     @PostMapping("/upload/github")
     public Map<String, String> uploadwithurl(@RequestParam String repoUrl){
+        if (repoUrl == null || repoUrl.isBlank()) {
+            throw new RuntimeException("Repository URL cannot be empty");
+        }
+        if (!repoUrl.contains("github.com")) {
+            throw new RuntimeException("Only GitHub URLs are supported");
+        }
+
         String scanId = storageServices.generateScanId();
         storageServices.urlDownload(repoUrl, scanId);
-        Scanresult r = scanService.startScan(scanId);
-        System.out.println("Total findings: "+ r.getFindings().size());
-        System.out.println("Risk Score: " + r.getThreatScore());
-        System.out.println("Risk Level: " + r.getRiskLevel());
+        Scanresult r = scanService.startScan(
+                scanId,
+                "GITHUB",
+                repoUrl
+        );
         Map<String, String> response = new HashMap<>();
         response.put("scanId", scanId);
         response.put("status", "UPLOADED");
