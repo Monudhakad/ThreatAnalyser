@@ -11,75 +11,115 @@ import org.springframework.stereotype.Service;
 import com.monu.threatanalyzer.model.ProjectMetadata;
 import com.monu.threatanalyzer.model.Scanresult;
 import com.monu.threatanalyzer.model.ThreatFinding;
+import com.monu.threatanalyzer.model.TechnologyFinding;
 
 
 @Service
 public class ScanService {
     private final Path uploadRoot = Paths.get("workspace/uploads");
-    public Scanresult startScan(String scanId){
+    public Scanresult startScan(
+            String scanId,
+            String sourceType,
+            String repositoryUrl
+    ){
         Scanresult result = new Scanresult(scanId);
 
-try {
+        try {
 
-    Path projectRoot =
-            uploadRoot.resolve(scanId)
-                      .resolve("extracted");
+            Path projectRoot =
+                    uploadRoot.resolve(scanId)
+                              .resolve("extracted");
 
-    System.out.println("Scanning directory: " + projectRoot);
-    
-    if (!Files.exists(projectRoot)) {
-        throw new RuntimeException("Project directory does not exist: " + projectRoot);
-    }
-    System.out.println("Directory exists: " + Files.exists(projectRoot));
+            if (!Files.exists(projectRoot)) {
+                throw new RuntimeException("Project directory does not exist: " + projectRoot);
+            }
 
-    // ===== COUNT FILES FIRST =====
-    long totalFiles;
+            System.out.println("Scanning started: " + scanId);
 
-    try (var countStream = Files.walk(projectRoot)) {
+            // ===== COUNT FILES FIRST =====
+            long totalFiles;
 
-        totalFiles = countStream
-                .filter(Files::isRegularFile)
-                .count();
-    }
+            try (var countStream = Files.walk(projectRoot)) {
 
-    // ===== CREATE METADATA =====
-    ProjectMetadata metadata =
-            new ProjectMetadata(
-                    scanId,
-                    projectRoot.getFileName().toString(),
-                    "GITHUB",
-                    "repo-url",
-                    (int) totalFiles
-            );
+                totalFiles = countStream
+                        .filter(Files::isRegularFile)
+                        .filter(path -> !path.toString().contains("node_modules"))
+                        .filter(path -> !path.toString().contains("target"))
+                        .filter(path -> !path.toString().contains(".git"))
+                        .filter(path -> !path.toString().endsWith(".class"))
+                        .filter(path -> !path.toString().endsWith(".jar"))
+                        .count();
+            }
 
-    result.setMetadata(metadata);
+            String projectName = "Unknown";
+            try (var dirStream = Files.list(projectRoot)) {
+                projectName = dirStream
+                        .findFirst()
+                        .map(path -> path.getFileName().toString())
+                        .orElse("Unknown");
+            }
 
-    // ===== NOW START SCANNING =====
-    try (var stream = Files.walk(projectRoot)) {
+            // ===== CREATE METADATA =====
+            ProjectMetadata metadata =
+                    new ProjectMetadata(
+                            scanId,
+                            projectName,
+                            sourceType,
+                            repositoryUrl,
+                            (int) totalFiles
+                    );
 
-        stream
-            .filter(Files::isRegularFile)
+            result.setMetadata(metadata);
 
-            .filter(path ->
-                    !path.toString().contains("node_modules")
-            )
+            // ===== NOW START SCANNING =====
+            try (var stream = Files.walk(projectRoot)) {
 
-            .filter(path ->
-                    !path.toString().contains("target")
-            )
+                stream
+                        .filter(Files::isRegularFile)
+                        .filter(path -> !path.toString().contains("node_modules"))
+                        .filter(path -> !path.toString().contains("target"))
+                        .filter(path -> !path.toString().contains(".git"))
+                        .filter(path -> !path.toString().endsWith(".class"))
+                        .filter(path -> !path.toString().endsWith(".jar"))
+                        .forEach(file -> {
 
-            .filter(path ->
-                    !path.toString().contains(".git")
-            )
-
-            .forEach(file -> {
-
-                if (file.getFileName()
+                    if (file.getFileName()
                         .toString()
                         .equalsIgnoreCase("pom.xml")) {
 
+                    if (!result.hasTechnology("Maven")) {
+                        result.addTechnology(
+                            new TechnologyFinding(
+                                "Maven",
+                                file.toString()
+                            )
+                        );
+                    }
+
                     checkpomDependencies(file, result);
-                }
+                    }
+
+                    if (file.toString().endsWith(".java")
+                        && !result.hasTechnology("Java")) {
+                    result.addTechnology(
+                        new TechnologyFinding(
+                            "Java",
+                            file.toString()
+                        )
+                    );
+                    }
+
+                    if (file.getFileName()
+                        .toString()
+                        .equalsIgnoreCase("package.json")
+                        && !result.hasTechnology("NodeJS")) {
+                    result.addTechnology(
+                        new TechnologyFinding(
+                            "NodeJS",
+                            file.toString()
+                        )
+                    );
+                    }
 
                 try {
 
@@ -113,33 +153,51 @@ try {
                                 )
                         );
                     }
+                        if (lower.contains("spring-boot")
+                            && !result.hasTechnology("Spring Boot")) {
+                        result.addTechnology(
+                            new TechnologyFinding(
+                                "Spring Boot",
+                                file.toString()
+                            )
+                        );
+                        }
+                        if (lower.contains("react")
+                            && !result.hasTechnology("React")) {
+                        result.addTechnology(
+                            new TechnologyFinding(
+                                "React",
+                                file.toString()
+                            )
+                        );
+                        }
                     // SQL INJECTION RISK
-                    if ((lower.contains("select ")
+                        if ((lower.contains("select ")
                             || lower.contains("insert ")
                             || lower.contains("update ")
                             || lower.contains("delete "))
                             && lower.contains("+")) {
                             
                         result.addFindings(
-                                new ThreatFinding(
-                                        "SQL_INJECTION_RISK",
-                                        file.toString(),
-                                        "HIGH"
-                                )
+                            new ThreatFinding(
+                                "SQL_INJECTION_RISK",
+                                file.toString(),
+                                "HIGH",
+                                "Use PreparedStatement to prevent SQL Injection"
+                            )
                         );
-                    }
-
+                        }
 
                 } catch (Exception ignored) {
                 }
-
-                System.out.println("Found file: " + file);
             });
-    }
+        }
 
-} catch (Exception e) {
-    throw new RuntimeException("Scan failed", e);
-}
+        System.out.println("Scanning completed: " + scanId);
+
+    } catch (Exception e) {
+        throw new RuntimeException("Scan failed", e);
+    }
         int score = 0;
         for (ThreatFinding f : result.getFindings()) {
             switch (f.getSeverity()) {
@@ -156,19 +214,20 @@ try {
             result.setRiskLevel("MEDIUM");
         }else{result.setRiskLevel("LOW");}
 
+        System.out.println("Findings count: " + result.getFindings().size());
+
         scanStore.put(scanId, result);
         return result;
     }
     private void checkpomDependencies(Path pomPath, Scanresult result){
         try {
             String content = Files.readString(pomPath);
-            System.out.println("Analyzing dependencies in: "+ pomPath);
 
             checkDependency(content, "log4j", "2.14", result, pomPath);
             checkDependency(content, "spring-core", "5.2", result, pomPath);
-            checkDependency(content, "jackson-databind", "2.9", result, pomPath);
-        } catch (Exception e) {
-            System.out.println("Failed to analyze now");
+            checkDependency(content, "jackson", "2.9", result, pomPath);
+            checkDependency(content, "commons-collections", "3.2", result, pomPath);
+        } catch (Exception ignored) {
         }
     }
     private void checkDependency(String content, String lib, String vulnVersion, Scanresult result, Path pomPath){

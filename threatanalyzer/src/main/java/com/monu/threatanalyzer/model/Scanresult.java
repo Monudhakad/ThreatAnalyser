@@ -4,6 +4,7 @@ import java.util.List;
 public class Scanresult {
     private String scanId;
     private List<ThreatFinding> findings = new ArrayList<>();
+    private List<TechnologyFinding> technologies = new ArrayList<>();
 
     public Scanresult(String scanId){
         this.scanId = scanId;
@@ -11,10 +12,23 @@ public class Scanresult {
     public void addFindings(ThreatFinding f){
         findings.add(f);
     }
+    public void addTechnology(TechnologyFinding t) {
+        technologies.add(t);
+    }
+    public boolean hasTechnology(String name) {
+        return technologies.stream()
+                .anyMatch(t ->
+                        t.getTechnology()
+                         .equalsIgnoreCase(name)
+                );
+    }
 
     public String getScanId() {return scanId;}
     public List<ThreatFinding> getFindings() {
         return findings;
+    }
+    public List<TechnologyFinding> getTechnologies() {
+        return technologies;
     }
     private int threatScore;
     private String riskLevel;
@@ -32,5 +46,9 @@ public class Scanresult {
 
     public void setMetadata(ProjectMetadata metadata) {
     this.metadata = metadata;
+    }
+
+    public int getTotalFindings() {
+        return findings.size();
     }
 }

@@ -28,11 +28,19 @@ public class PdfReportGenerator {
             document.add(new Paragraph("Findings:"));
 
             for (ThreatFinding f : result.getFindings()) {
-                document.add(new Paragraph(
-                        "- " + f.getType()
+                String line = "- " + f.getType()
                         + " | " + f.getSeverity()
-                        + " | " + f.getFile()
-                ));
+                        + " | " + f.getFile();
+                if (f.getRemediation() != null && !f.getRemediation().isBlank()) {
+                    line += " | Remediation: " + f.getRemediation();
+                }
+                document.add(new Paragraph(line));
+            }
+
+            document.add(new Paragraph(" "));
+            document.add(new Paragraph("Detected Technologies"));
+            for (TechnologyFinding t : result.getTechnologies()) {
+                document.add(new Paragraph("- " + t.getTechnology()));
             }
 
             document.close();
