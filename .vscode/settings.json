@@ -1,5 +1,12 @@
 {
     "java.compile.nullAnalysis.mode": "automatic",
     "java.debug.settings.onBuildFailureProceed": true,
-    "java.configuration.updateBuildConfiguration": "interactive"
+    "java.configuration.updateBuildConfiguration": "interactive",
+    "java.configuration.runtimes": [
+        {
+            "name": "JavaSE-25",
+            "path": "C:\\Users\\monud\\.jdk\\jdk-25.0.2"
+        }
+    ],
+    "java.jdt.ls.java.home": "C:\\Users\\monud\\.jdk\\jdk-25.0.2"
 }
