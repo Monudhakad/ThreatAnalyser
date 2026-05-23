@@ -172,20 +172,21 @@ public class ScanService {
                         );
                         }
                     // SQL INJECTION RISK
-                    if ((lower.contains("select ")
+                        if ((lower.contains("select ")
                             || lower.contains("insert ")
                             || lower.contains("update ")
                             || lower.contains("delete "))
                             && lower.contains("+")) {
                             
                         result.addFindings(
-                                new ThreatFinding(
-                                        "SQL_INJECTION_RISK",
-                                        file.toString(),
-                                        "HIGH"
-                                )
+                            new ThreatFinding(
+                                "SQL_INJECTION_RISK",
+                                file.toString(),
+                                "HIGH",
+                                "Use PreparedStatement to prevent SQL Injection"
+                            )
                         );
-                    }
+                        }
 
                 } catch (Exception ignored) {
                 }
