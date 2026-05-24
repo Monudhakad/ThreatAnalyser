@@ -31,6 +31,12 @@ public class PdfReportGenerator {
                 String line = "- " + f.getType()
                         + " | " + f.getSeverity()
                         + " | " + f.getFile();
+                if (f.getSummary() != null && !f.getSummary().isBlank()) {
+                    line += " | Summary: " + f.getSummary();
+                }
+                if (f.getCveId() != null && !f.getCveId().isBlank()) {
+                    line += " | CVE: " + f.getCveId();
+                }
                 if (f.getRemediation() != null && !f.getRemediation().isBlank()) {
                     line += " | Remediation: " + f.getRemediation();
                 }

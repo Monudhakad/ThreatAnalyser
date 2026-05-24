@@ -1,91 +1,219 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Threat Finder</title>
-
-<!-- # LINK CSS -->
-<link rel="stylesheet" href="/styles.css">
-
-
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ThreatAnalyzer - Security Vulnerability Scanner</title>
+    <link rel="stylesheet" href="/styles.css">
 </head>
 
 <body>
 
-<!-- # HEADER -->
-<div class="header">
-    <img src="https://imgs.search.brave.com/Sc76jPgAG6IKIE92LpfwEI7iRa3SEpZNmhxT5LZDFZY/rs:fit:500:0:1:0/g:ce/aHR0cHM6Ly9wbmcu/cG5ndHJlZS5jb20v/cG5nLXZlY3Rvci8y/MDE5MDMxOS9vdXJt/aWQvcG5ndHJlZS12/ZWN0b3Itc2VhcmNo/LWljb24tcG5nLWlt/YWdlXzg0ODEwMy5q/cGc" class="logo">
-    <div class="title">Threat Finder</div>
-</div>
-
-<div class="container">
-
-    <h1>AI Threat Analyzer</h1>
-    <h2>Smart Security Detection for Your Code</h2>
-
-    <div class="description">
-        Upload your project or provide a GitHub repository link to detect vulnerabilities.
+<!-- HEADER -->
+<header class="header">
+    <div class="header-content">
+        <div class="logo-section">
+            <svg class="logo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 2L2 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-10-5z"/>
+                <path d="M12 11v5M12 16h4" stroke="currentColor" stroke-width="2"/>
+            </svg>
+            <h1 class="title">ThreatAnalyzer</h1>
+        </div>
+        <div class="tagline">Automated Security Vulnerability Detection</div>
     </div>
+</header>
 
-    <div class="main-grid">
+<main class="container">
+    <!-- HERO SECTION -->
+    <section id="hero" class="hero">
+        <h2>Code Security Analysis Platform</h2>
+        <p>Detect vulnerabilities, security risks, and dangerous dependencies in your projects instantly</p>
+    </section>
 
-        <!-- # UPLOAD -->
-        <div id="upload" class="card">
-            <h3>Upload Project</h3>
+    <!-- UPLOAD SECTION -->
+    <div id="uploadSection" class="card-container">
+        <div class="card upload-card">
+            <h3 class="card-title">📤 Start Security Scan</h3>
+            
+            <div class="input-group">
+                <label class="input-label">Choose Upload Method</label>
+                <div class="radio-group">
+                    <label class="radio-label">
+                        <input type="radio" name="uploadType" value="file" checked onchange="toggleUploadType()">
+                        <span>Upload ZIP File</span>
+                    </label>
+                    <label class="radio-label">
+                        <input type="radio" name="uploadType" value="github" onchange="toggleUploadType()">
+                        <span>GitHub Repository</span>
+                    </label>
+                </div>
+            </div>
 
-            <input type="file" id="fileInput">
+            <div id="fileSection" class="input-group">
+                <label class="input-label">Select Project ZIP</label>
+                <div class="file-upload">
+                    <input type="file" id="fileInput" accept=".zip" onchange="validateFile()">
+                    <p class="file-hint">Max size: 500 MB</p>
+                    <p id="fileError" class="error hidden"></p>
+                </div>
+            </div>
 
-            <p>OR</p>
+            <div id="githubSection" class="input-group hidden">
+                <label class="input-label">GitHub Repository URL</label>
+                <input type="text" id="githubInput" placeholder="https://github.com/user/repo" 
+                       onchange="validateGithub()" onkeyup="validateGithub()">
+                <p class="input-hint">Example: https://github.com/spring-projects/spring-boot</p>
+                <p id="githubError" class="error hidden"></p>
+            </div>
 
-            <input type="text" id="githubInput" placeholder="Paste GitHub repo link">
+            <!-- ADVANCED FILTERS -->
+            <div class="filters-section">
+                <details>
+                    <summary class="filter-toggle">⚙️ Advanced Filters (Optional)</summary>
+                    <div class="filter-options">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="filterSecurityOnly" checked>
+                            <span>Security Threats Only</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="filterDependencies" checked>
+                            <span>Scan Dependencies</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="filterTechnologies" checked>
+                            <span>Detect Technologies</span>
+                        </label>
+                        <div class="filter-option">
+                            <label class="input-label">Max File Size (MB):</label>
+                            <input type="number" id="maxFileSize" value="10" min="1" max="100">
+                        </div>
+                        <div class="filter-option">
+                            <label class="input-label">Minimum Severity:</label>
+                            <select id="minSeverity">
+                                <option value="LOW">Low & Above</option>
+                                <option value="MEDIUM">Medium & Above</option>
+                                <option value="HIGH">High & Above</option>
+                                <option value="CRITICAL">Critical Only</option>
+                            </select>
+                        </div>
+                    </div>
+                </details>
+            </div>
 
-            <br><br>
-
-            <button onclick="analyze()">Start Analysis</button>
+            <button class="btn btn-primary" onclick="analyze()">
+                <span class="btn-text">Start Analysis</span>
+                <span class="btn-icon">→</span>
+            </button>
         </div>
 
-        <!-- # INSIGHTS -->
-        <div class="card insights">
-            <h3>What We Detect</h3>
-            <ul>
-                <li>Hardcoded passwords</li>
-                <li>Insecure APIs</li>
-                <li>Weak encryption</li>
-                <li>Configuration issues</li>
-                <li>Unsafe coding patterns</li>
-            </ul>
-
-            <h3>Why It Matters</h3>
-            <ul>
-                <li>Prevents data breaches</li>
-                <li>Improves security</li>
-                <li>Saves time</li>
-                <li>Ensures safe deployment</li>
+        <!-- INFO PANEL -->
+        <div class="card info-card">
+            <h3 class="card-title">🔍 What We Detect</h3>
+            <div class="threat-list">
+                <div class="threat-item critical">
+                    <span class="threat-icon">⚠️</span>
+                    <div>
+                        <strong>Critical Threats</strong>
+                        <p>Vulnerable dependencies, CVE exploits</p>
+                    </div>
+                </div>
+                <div class="threat-item high">
+                    <span class="threat-icon">🔴</span>
+                    <div>
+                        <strong>Security Vulnerabilities</strong>
+                        <p>SQL injection, command execution, secret leaks</p>
+                    </div>
+                </div>
+                <div class="threat-item medium">
+                    <span class="threat-icon">🟠</span>
+                    <div>
+                        <strong>Medium Issues</strong>
+                        <p>Hardcoded credentials, unsafe patterns</p>
+                    </div>
+                </div>
+                <div class="threat-item info">
+                    <span class="threat-icon">ℹ️</span>
+                    <div>
+                        <strong>Technology Stack</strong>
+                        <p>Detects Java, Spring Boot, React, Maven, NodeJS</p>
+                    </div>
+                </div>
+            </div>
+            <h3 class="card-title">✅ Benefits</h3>
+            <ul class="benefits-list">
+                <li>Early vulnerability detection</li>
+                <li>Automated security audits</li>
+                <li>Actionable remediation steps</li>
+                <li>Risk scoring & classification</li>
+                <li>Comprehensive PDF reports</li>
             </ul>
         </div>
-
     </div>
 
-    <!-- # LOADING -->
-    <div id="loading" class="card hidden">
-        <h3>Analyzing Project...</h3>
+    <!-- LOADING STATE -->
+    <div id="loading" class="card-container hidden">
+        <div class="card loading-card">
+            <div class="spinner"></div>
+            <h3>Analyzing Your Project...</h3>
+            <p id="loadingStatus">Initializing scan...</p>
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: 0%"></div>
+            </div>
+        </div>
     </div>
 
-    <!-- # REPORT -->
-    <div id="report" class="card hidden">
-        <h3>Threat Report</h3>
-        <div id="scanSummary" class="report-summary"></div>
-        <p>Your analysis is complete. Download the PDF report below.</p>
-        <a id="pdfLink" class="download-btn" href="#" target="_blank">Download PDF Report</a>
+    <!-- RESULTS SECTION -->
+    <div id="resultsSection" class="card-container hidden">
+        <div class="card results-card">
+            <h3 class="card-title">📊 Security Analysis Results</h3>
+            
+            <div class="results-summary">
+                <div class="summary-card risk-high" id="riskCard">
+                    <div class="summary-label">Risk Level</div>
+                    <div class="summary-value" id="riskLevel">—</div>
+                </div>
+                <div class="summary-card findings" id="findingsCard">
+                    <div class="summary-label">Threats Found</div>
+                    <div class="summary-value" id="findingsCount">0</div>
+                </div>
+                <div class="summary-card tech" id="techCard">
+                    <div class="summary-label">Technologies</div>
+                    <div class="summary-value" id="techCount">0</div>
+                </div>
+                <div class="summary-card score" id="scoreCard">
+                    <div class="summary-label">Threat Score</div>
+                    <div class="summary-value" id="threatScore">0</div>
+                </div>
+            </div>
+
+            <div id="resultsDetail" class="results-detail"></div>
+
+            <div class="results-actions">
+                <button class="btn btn-primary" id="downloadBtn" onclick="downloadReport()">
+                    📥 Download PDF Report
+                </button>
+                <button class="btn btn-secondary" onclick="resetAnalysis()">
+                    ↺ New Analysis
+                </button>
+            </div>
+        </div>
     </div>
 
-    <div class="footer">
-        Prototype UI for demonstration. Final system may differ.
+    <!-- ERROR STATE -->
+    <div id="error" class="card-container hidden">
+        <div class="card error-card">
+            <h3>⚠️ Error Occurred</h3>
+            <p id="errorMessage"></p>
+            <button class="btn btn-secondary" onclick="resetAnalysis()">Back to Upload</button>
+        </div>
     </div>
 
-</div>
+    <footer class="footer">
+        <p>ThreatAnalyzer v1.0 | Enterprise Security Scanning Platform</p>
+        <p>Detect vulnerabilities early, secure your code, protect your users</p>
+    </footer>
+</main>
 
-<!-- # LINK JS -->
 <script src="/script.js"></script>
 
 </body>

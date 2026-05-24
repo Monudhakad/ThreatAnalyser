@@ -51,12 +51,42 @@ public class StorageServices {
                 .toString()
                 .substring(0, 8);
     }
+
+    private String normalizeGithubRepoUrl(String repoUrl) {
+        String normalized = repoUrl == null ? "" : repoUrl.trim();
+        if (normalized.isEmpty()) {
+            throw new IllegalArgumentException("Repository URL cannot be empty");
+        }
+
+        normalized = normalized.replaceAll("\\s+", "");
+        if (normalized.endsWith("/")) {
+            normalized = normalized.substring(0, normalized.length() - 1);
+        }
+        if (normalized.endsWith(".git")) {
+            normalized = normalized.substring(0, normalized.length() - 4);
+        }
+
+        try {
+            java.net.URI uri = new java.net.URI(normalized);
+            String host = uri.getHost() == null ? "" : uri.getHost().toLowerCase();
+            String path = uri.getPath() == null ? "" : uri.getPath();
+            if (!host.equals("github.com") || path == null || path.split("/").length < 3) {
+                throw new IllegalArgumentException("Only GitHub repository URLs are supported");
+            }
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Invalid GitHub repository URL", e);
+        }
+
+        return normalized;
+    }
+
     //to download file with given URl
     public String urlDownload(String repoUrl, String scanId){
+        String normalizedRepoUrl = normalizeGithubRepoUrl(repoUrl);
         String[] branches = {"main", "master", "develop"};
         for (String branch : branches) {// to try both main and master for branches.
             try {
-                String zipUrl = repoUrl + "/archive/refs/heads/" + branch + ".zip";
+                String zipUrl = normalizedRepoUrl + "/archive/refs/heads/" + branch + ".zip";
                 java.net.URL url = new java.net.URL(zipUrl);
                 java.io.InputStream in = url.openStream();
                 Path scanFolder = scanWorkspace(scanId);

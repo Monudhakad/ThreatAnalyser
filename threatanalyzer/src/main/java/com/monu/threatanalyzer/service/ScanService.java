@@ -6,6 +6,7 @@ import java.nio.file.Paths;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.monu.threatanalyzer.model.ProjectMetadata;
@@ -17,6 +18,10 @@ import com.monu.threatanalyzer.model.TechnologyFinding;
 @Service
 public class ScanService {
     private final Path uploadRoot = Paths.get("workspace/uploads");
+
+    @Autowired
+    private VulnerabilityLookupService vulnerabilityLookupService;
+
     public Scanresult startScan(
             String scanId,
             String sourceType,
@@ -43,11 +48,7 @@ public class ScanService {
 
                 totalFiles = countStream
                         .filter(Files::isRegularFile)
-                        .filter(path -> !path.toString().contains("node_modules"))
-                        .filter(path -> !path.toString().contains("target"))
-                        .filter(path -> !path.toString().contains(".git"))
-                        .filter(path -> !path.toString().endsWith(".class"))
-                        .filter(path -> !path.toString().endsWith(".jar"))
+                        .filter(this::shouldIncludeFile)
                         .count();
             }
 
@@ -76,11 +77,7 @@ public class ScanService {
 
                 stream
                         .filter(Files::isRegularFile)
-                        .filter(path -> !path.toString().contains("node_modules"))
-                        .filter(path -> !path.toString().contains("target"))
-                        .filter(path -> !path.toString().contains(".git"))
-                        .filter(path -> !path.toString().endsWith(".class"))
-                        .filter(path -> !path.toString().endsWith(".jar"))
+                        .filter(this::shouldIncludeFile)
                         .forEach(file -> {
 
                     if (file.getFileName()
@@ -230,9 +227,69 @@ public class ScanService {
         } catch (Exception ignored) {
         }
     }
+
+    private boolean shouldIncludeFile(Path path) {
+        String normalized = path.toString().replace('\\', '/').toLowerCase();
+
+        if (normalized.contains("/node_modules/")
+                || normalized.contains("/target/")
+                || normalized.contains("/.git/")
+                || normalized.contains("/.idea/")
+                || normalized.contains("/build/")
+                || normalized.contains("/dist/")
+                || normalized.contains("/coverage/")) {
+            return false;
+        }
+
+        String fileName = path.getFileName().toString().toLowerCase();
+
+        return !fileName.endsWith(".class")
+                && !fileName.endsWith(".jar")
+                && !fileName.endsWith(".war")
+                && !fileName.endsWith(".zip")
+                && !fileName.endsWith(".png")
+                && !fileName.endsWith(".jpg")
+                && !fileName.endsWith(".jpeg")
+                && !fileName.endsWith(".gif")
+                && !fileName.endsWith(".ico")
+                && !fileName.endsWith(".svg")
+                && !fileName.endsWith(".pdf")
+                && !fileName.endsWith(".exe")
+                && !fileName.endsWith(".dll")
+                && !fileName.endsWith(".so")
+                && !fileName.endsWith(".mp3")
+                && !fileName.endsWith(".mp4")
+                && !fileName.endsWith(".woff")
+                && !fileName.endsWith(".woff2")
+                && !fileName.endsWith(".ttf")
+                && !fileName.endsWith(".eot");
+    }
+
     private void checkDependency(String content, String lib, String vulnVersion, Scanresult result, Path pomPath){
-        if (content.contains(lib)&& content.contains(vulnVersion)) {
-            result.addFindings(new ThreatFinding("Vulnerable_dependency", pomPath.toString(), "CRITICAL"));
+        if (content.contains(lib) && content.contains(vulnVersion)) {
+            VulnerabilityInfo info = vulnerabilityLookupService.lookup(lib, vulnVersion);
+
+            if (info == null) {
+                result.addFindings(new ThreatFinding(
+                        "Vulnerable_dependency",
+                        pomPath.toString(),
+                        "CRITICAL",
+                        "Upgrade " + lib + " to a fixed release"
+                ));
+                return;
+            }
+
+            result.addFindings(new ThreatFinding(
+                    "Vulnerable_dependency",
+                    pomPath.toString(),
+                    info.getSeverity(),
+                    info.getRecommendedFix(),
+                    info.getTitle(),
+                    info.getDescription(),
+                    info.getCveId(),
+                    info.getCveUrl(),
+                    info.getSource()
+            ));
         }
     }
     public Scanresult getScanResult(String scanId){
