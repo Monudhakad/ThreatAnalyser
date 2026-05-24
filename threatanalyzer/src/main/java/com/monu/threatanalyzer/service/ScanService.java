@@ -6,6 +6,7 @@ import java.nio.file.Paths;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.monu.threatanalyzer.model.ProjectMetadata;
@@ -17,6 +18,10 @@ import com.monu.threatanalyzer.model.TechnologyFinding;
 @Service
 public class ScanService {
     private final Path uploadRoot = Paths.get("workspace/uploads");
+
+    @Autowired
+    private VulnerabilityLookupService vulnerabilityLookupService;
+
     public Scanresult startScan(
             String scanId,
             String sourceType,
@@ -261,8 +266,30 @@ public class ScanService {
     }
 
     private void checkDependency(String content, String lib, String vulnVersion, Scanresult result, Path pomPath){
-        if (content.contains(lib)&& content.contains(vulnVersion)) {
-            result.addFindings(new ThreatFinding("Vulnerable_dependency", pomPath.toString(), "CRITICAL"));
+        if (content.contains(lib) && content.contains(vulnVersion)) {
+            VulnerabilityInfo info = vulnerabilityLookupService.lookup(lib, vulnVersion);
+
+            if (info == null) {
+                result.addFindings(new ThreatFinding(
+                        "Vulnerable_dependency",
+                        pomPath.toString(),
+                        "CRITICAL",
+                        "Upgrade " + lib + " to a fixed release"
+                ));
+                return;
+            }
+
+            result.addFindings(new ThreatFinding(
+                    "Vulnerable_dependency",
+                    pomPath.toString(),
+                    info.getSeverity(),
+                    info.getRecommendedFix(),
+                    info.getTitle(),
+                    info.getDescription(),
+                    info.getCveId(),
+                    info.getCveUrl(),
+                    info.getSource()
+            ));
         }
     }
     public Scanresult getScanResult(String scanId){

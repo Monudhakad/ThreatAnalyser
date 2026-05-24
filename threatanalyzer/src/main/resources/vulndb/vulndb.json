@@ -1,11 +1,41 @@
 {
   "log4j": {
-    "2.14": "Remote Code Execution vulnerability (Log4Shell)"
+    "2.14": {
+      "dependency": "log4j",
+      "version": "2.14",
+      "title": "Log4Shell",
+      "description": "This version is vulnerable to Log4Shell (CVE-2021-44228). Attackers can trigger remote code execution through JNDI lookups in Log4j 2.14.",
+      "cveId": "CVE-2021-44228",
+      "cveUrl": "https://nvd.nist.gov/vuln/detail/CVE-2021-44228",
+      "severity": "CRITICAL",
+      "source": "NVD",
+      "recommendedFix": "Upgrade Log4j to 2.17.1 or newer and remove any vulnerable Log4j artifacts from the build."
+    }
   },
   "spring-core": {
-    "5.2": "Known deserialization vulnerability"
+    "5.2": {
+      "dependency": "spring-core",
+      "version": "5.2",
+      "title": "Spring Core vulnerable version",
+      "description": "This version has known Spring Framework vulnerabilities and should be upgraded to a patched release.",
+      "cveId": "",
+      "cveUrl": "",
+      "severity": "HIGH",
+      "source": "local-vulndb",
+      "recommendedFix": "Upgrade Spring Framework to a supported patched release."
+    }
   },
   "jackson-databind": {
-    "2.9": "Multiple gadget deserialization exploits"
+    "2.9": {
+      "dependency": "jackson-databind",
+      "version": "2.9",
+      "title": "Jackson deserialization risk",
+      "description": "This version is affected by multiple Jackson deserialization vulnerabilities.",
+      "cveId": "",
+      "cveUrl": "",
+      "severity": "HIGH",
+      "source": "local-vulndb",
+      "recommendedFix": "Upgrade Jackson Databind to a fixed release and avoid unsafe deserialization."
+    }
   }
 }

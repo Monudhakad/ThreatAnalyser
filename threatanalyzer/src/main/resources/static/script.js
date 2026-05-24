@@ -80,15 +80,10 @@ function showResults(result) {
     const threatScore = document.getElementById('threatScore');
     const resultsDetail = document.getElementById('resultsDetail');
 
-    const securityOnly = document.getElementById('filterSecurityOnly')?.checked ?? true;
     const showDependencies = document.getElementById('filterDependencies')?.checked ?? true;
     const showTechnologies = document.getElementById('filterTechnologies')?.checked ?? true;
 
     const findings = (result.findings || []).filter(finding => {
-        if (securityOnly && finding.type === 'Vulnerable_dependency') {
-            return false;
-        }
-
         if (!showDependencies && finding.type === 'Vulnerable_dependency') {
             return false;
         }
@@ -115,7 +110,11 @@ function showResults(result) {
     const findingsHtml = findings.map(finding => `
         <li>
             <strong>${finding.type}</strong> — ${finding.severity}
+            ${finding.summary ? `<div style="margin-top:0.3rem; color:#fef3c7;">${finding.summary}</div>` : ''}
+            ${finding.description ? `<div style="margin-top:0.3rem; color:#cbd5e1;">${finding.description}</div>` : ''}
+            ${finding.cveId ? `<div style="margin-top:0.3rem; color:#fda4af;">CVE: ${finding.cveId}</div>` : ''}
             ${finding.remediation ? `<div style="margin-top:0.3rem; color:#cbd5e1;">Fix: ${finding.remediation}</div>` : ''}
+            ${finding.source ? `<div style="margin-top:0.3rem; color:#94a3b8;">Source: ${finding.source}</div>` : ''}
             <div style="margin-top:0.3rem; color:#94a3b8;">File: ${finding.file}</div>
         </li>
     `).join('');
