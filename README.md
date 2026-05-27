@@ -105,7 +105,7 @@ threatanalyzer/
 ├── pom.xml                 → Maven dependencies
 └── mvnw / mvnw.cmd        → Maven Wrapper
 ```
-<img width="958" height="580" alt="_- visual selection" src="https://github.com/user-attachments/assets/512d2d02-a2e4-4967-9bab-3535d3a9f247" />
+
 
 
 ## 🔧 Tech Stack
