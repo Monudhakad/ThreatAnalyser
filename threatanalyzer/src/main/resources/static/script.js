@@ -79,6 +79,8 @@ function showResults(result) {
     const techCount = document.getElementById('techCount');
     const threatScore = document.getElementById('threatScore');
     const resultsDetail = document.getElementById('resultsDetail');
+    const severitySummary = document.getElementById('severitySummary');
+    const resultsChart = document.getElementById('resultsChart');
 
     const showDependencies = document.getElementById('filterDependencies')?.checked ?? true;
     const showTechnologies = document.getElementById('filterTechnologies')?.checked ?? true;
@@ -92,6 +94,20 @@ function showResults(result) {
     });
 
     const technologies = showTechnologies ? (result.technologies || []) : [];
+
+    const severityCounts = {
+        CRITICAL: 0,
+        HIGH: 0,
+        MEDIUM: 0,
+        LOW: 0
+    };
+
+    findings.forEach(finding => {
+        const severity = (finding.severity || 'UNKNOWN').toUpperCase();
+        if (severityCounts[severity] !== undefined) {
+            severityCounts[severity] += 1;
+        }
+    });
 
     riskCard.className = 'summary-card';
     if (riskLevel === 'HIGH') {
@@ -107,31 +123,93 @@ function showResults(result) {
     threatScore.textContent = result.threatScore || 0;
     document.getElementById('riskLevel').textContent = riskLevel;
 
-    const findingsHtml = findings.map(finding => `
-        <li>
-            <strong>${finding.type}</strong> — ${finding.severity}
-            ${finding.summary ? `<div style="margin-top:0.3rem; color:#fef3c7;">${finding.summary}</div>` : ''}
-            ${finding.description ? `<div style="margin-top:0.3rem; color:#cbd5e1;">${finding.description}</div>` : ''}
-            ${finding.cveId ? `<div style="margin-top:0.3rem; color:#fda4af;">CVE: ${finding.cveId}</div>` : ''}
-            ${finding.remediation ? `<div style="margin-top:0.3rem; color:#cbd5e1;">Fix: ${finding.remediation}</div>` : ''}
-            ${finding.source ? `<div style="margin-top:0.3rem; color:#94a3b8;">Source: ${finding.source}</div>` : ''}
-            <div style="margin-top:0.3rem; color:#94a3b8;">File: ${finding.file}</div>
-        </li>
+    const severityHtml = Object.entries(severityCounts).map(([level, count]) => `
+        <div class="severity-badge ${level.toLowerCase()}">
+            <span class="severity-label">${level}</span>
+            <strong>${count}</strong>
+        </div>
     `).join('');
 
-    const technologiesHtml = technologies.map(tech => `
-        <li>${tech.technology} <span style="color:#94a3b8;">(${tech.detectedFrom || 'Detected'})</span></li>
+    severitySummary.innerHTML = severityHtml;
+
+    const totalFindings = Math.max(findings.length, 1);
+    const chartBars = Object.entries(severityCounts).map(([level, count]) => {
+        const width = Math.round((count / totalFindings) * 100);
+        return `
+            <div class="chart-row">
+                <span>${level}</span>
+                <div class="chart-track">
+                    <div class="chart-fill ${level.toLowerCase()}" style="width: ${width}%"></div>
+                </div>
+                <span>${count}</span>
+            </div>
+        `;
+    }).join('');
+    resultsChart.innerHTML = chartBars;
+
+    const findingsRows = findings.map(finding => `
+        <tr>
+            <td>${finding.type}</td>
+            <td><span class="badge ${finding.severity?.toLowerCase() || 'low'}">${finding.severity || 'UNKNOWN'}</span></td>
+            <td>${finding.summary || ''}</td>
+            <td>${finding.cveId || ''}</td>
+            <td>${finding.remediation || ''}</td>
+            <td>${finding.file || ''}</td>
+        </tr>
+    `).join('');
+
+    const technologiesRows = technologies.map(tech => `
+        <tr>
+            <td>${tech.technology}</td>
+            <td>${tech.detectedFrom || 'Detected'}</td>
+        </tr>
     `).join('');
 
     resultsDetail.innerHTML = `
-        <h4>Detected Technologies</h4>
-        ${technologiesHtml ? `<ul>${technologiesHtml}</ul>` : '<p>No technologies detected.</p>'}
-        <h4>Security Findings</h4>
-        ${findingsHtml ? `<ul>${findingsHtml}</ul>` : '<p>No findings detected.</p>'}
-        <h4>Metadata</h4>
-        <p><strong>Project:</strong> ${result.metadata?.projectName || 'Unknown'}</p>
-        <p><strong>Source:</strong> ${result.metadata?.sourceType || 'Unknown'}</p>
-        <p><strong>Repository:</strong> ${result.metadata?.repositoryUrl || 'Local Upload'}</p>
+        <div class="section-block">
+            <h4>Security Findings</h4>
+            ${findingsRows ? `
+                <table class="results-table">
+                    <thead>
+                        <tr>
+                            <th>Type</th>
+                            <th>Severity</th>
+                            <th>Summary</th>
+                            <th>CVE</th>
+                            <th>Remediation</th>
+                            <th>File</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${findingsRows}
+                    </tbody>
+                </table>
+            ` : '<p>No findings detected.</p>'}
+        </div>
+        <div class="section-block">
+            <h4>Detected Technologies</h4>
+            ${technologiesRows ? `
+                <table class="results-table">
+                    <thead>
+                        <tr><th>Technology</th><th>Source</th></tr>
+                    </thead>
+                    <tbody>
+                        ${technologiesRows}
+                    </tbody>
+                </table>
+            ` : '<p>No technologies detected.</p>'}
+        </div>
+        <div class="section-block">
+            <h4>Scan Metadata</h4>
+            <table class="meta-table">
+                <tbody>
+                    <tr><th>Project</th><td>${result.metadata?.projectName || 'Unknown'}</td></tr>
+                    <tr><th>Source</th><td>${result.metadata?.sourceType || 'Unknown'}</td></tr>
+                    <tr><th>Repository</th><td>${result.metadata?.repositoryUrl || 'Local Upload'}</td></tr>
+                    <tr><th>Total Files</th><td>${result.metadata?.totalFiles || 'Unknown'}</td></tr>
+                </tbody>
+            </table>
+        </div>
     `;
 
     document.getElementById('loading').classList.add('hidden');
