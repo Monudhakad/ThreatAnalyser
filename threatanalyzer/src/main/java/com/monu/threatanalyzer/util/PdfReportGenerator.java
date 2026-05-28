@@ -1,15 +1,29 @@
 package com.monu.threatanalyzer.util;
 
+import com.itextpdf.kernel.colors.Color;
 import com.itextpdf.kernel.colors.ColorConstants;
+import com.itextpdf.kernel.colors.DeviceRgb;
 import com.itextpdf.kernel.pdf.*;
 import com.itextpdf.layout.*;
 import com.itextpdf.layout.element.*;
+import com.itextpdf.layout.properties.TextAlignment;
 
 import com.monu.threatanalyzer.model.*;
 
 import java.io.ByteArrayOutputStream;
 
 public class PdfReportGenerator {
+
+    private static Color getSeverityColor(String severity) {
+        if (severity == null) return ColorConstants.GRAY;
+        return switch (severity.toUpperCase()) {
+            case "CRITICAL" -> new DeviceRgb(153, 27, 27);
+            case "HIGH" -> new DeviceRgb(239, 68, 68);
+            case "MEDIUM" -> new DeviceRgb(245, 158, 11);
+            case "LOW" -> new DeviceRgb(16, 185, 129);
+            default -> ColorConstants.GRAY;
+        };
+    }
 
     public static byte[] generate(Scanresult result) {
 
@@ -20,20 +34,49 @@ public class PdfReportGenerator {
             PdfDocument pdf = new PdfDocument(writer);
             Document document = new Document(pdf);
 
-            document.add(new Paragraph("Threat Analysis Report")
-                    .setFontSize(18)
+            // Add title with styling
+            document.add(new Paragraph("🛡️ ThreatAnalyzer Security Report")
+                    .setFontSize(28)
                     .setBold()
-                    .setFontColor(ColorConstants.BLACK));
-            document.add(new Paragraph("Scan ID: " + result.getScanId())
-                    .setFontSize(10)
-                    .setFontColor(ColorConstants.DARK_GRAY));
-            document.add(new Paragraph("Risk Level: " + result.getRiskLevel())
-                    .setFontSize(10)
-                    .setFontColor(ColorConstants.DARK_GRAY));
-            document.add(new Paragraph("Threat Score: " + result.getThreatScore())
-                    .setFontSize(10)
-                    .setFontColor(ColorConstants.DARK_GRAY));
+                    .setTextAlignment(TextAlignment.CENTER)
+                    .setFontColor(ColorConstants.BLACK)
+                    .setMarginBottom(10));
+            
+            document.add(new Paragraph("Comprehensive Vulnerability Assessment")
+                    .setFontSize(12)
+                    .setTextAlignment(TextAlignment.CENTER)
+                    .setFontColor(ColorConstants.DARK_GRAY)
+                    .setMarginBottom(20));
+
+            // Metadata section
+            document.add(new Paragraph("Report Metadata")
+                    .setFontSize(14)
+                    .setBold()
+                    .setFontColor(new DeviceRgb(59, 130, 246))
+                    .setMarginTop(10)
+                    .setMarginBottom(8));
+            
+            Table metaTable = new Table(new float[]{2, 5});
+            metaTable.setWidth(500);
+            metaTable.addCell(createStyledCell("Scan ID", true));
+            metaTable.addCell(createStyledCell(result.getScanId(), false));
+            metaTable.addCell(createStyledCell("Risk Level", true));
+            Color riskColor = "HIGH".equals(result.getRiskLevel()) ? new DeviceRgb(239, 68, 68) : 
+                             "MEDIUM".equals(result.getRiskLevel()) ? new DeviceRgb(245, 158, 11) : 
+                             new DeviceRgb(16, 185, 129);
+            metaTable.addCell(createStyledCell(result.getRiskLevel(), false).setFontColor(riskColor));
+            metaTable.addCell(createStyledCell("Threat Score", true));
+            metaTable.addCell(createStyledCell(String.valueOf(result.getThreatScore()), false));
+            document.add(metaTable);
             document.add(new Paragraph(" "));
+
+            // Severity Summary Section
+            document.add(new Paragraph("Severity Summary")
+                    .setFontSize(14)
+                    .setBold()
+                    .setFontColor(new DeviceRgb(59, 130, 246))
+                    .setMarginTop(15)
+                    .setMarginBottom(8));
 
             int criticalCount = 0;
             int highCount = 0;
@@ -50,72 +93,111 @@ public class PdfReportGenerator {
                 }
             }
 
-            Table summaryTable = new Table(new float[]{3, 2});
-            summaryTable.addHeaderCell(new Cell().add(new Paragraph("Summary").setBold()));
-            summaryTable.addHeaderCell(new Cell().add(new Paragraph("Value").setBold()));
-            summaryTable.addCell(new Cell().add(new Paragraph("Total Findings")));
-            summaryTable.addCell(new Cell().add(new Paragraph(String.valueOf(result.getFindings().size()))));
-            summaryTable.addCell(new Cell().add(new Paragraph("Critical")));
-            summaryTable.addCell(new Cell().add(new Paragraph(String.valueOf(criticalCount))));
-            summaryTable.addCell(new Cell().add(new Paragraph("High")));
-            summaryTable.addCell(new Cell().add(new Paragraph(String.valueOf(highCount))));
-            summaryTable.addCell(new Cell().add(new Paragraph("Medium")));
-            summaryTable.addCell(new Cell().add(new Paragraph(String.valueOf(mediumCount))));
-            summaryTable.addCell(new Cell().add(new Paragraph("Low")));
-            summaryTable.addCell(new Cell().add(new Paragraph(String.valueOf(lowCount))));
+            Table summaryTable = new Table(new float[]{2, 1.5f, 1.5f, 1.5f, 1.5f});
+            summaryTable.addHeaderCell(createHeaderCell("Category"));
+            summaryTable.addHeaderCell(createHeaderCell("Critical"));
+            summaryTable.addHeaderCell(createHeaderCell("High"));
+            summaryTable.addHeaderCell(createHeaderCell("Medium"));
+            summaryTable.addHeaderCell(createHeaderCell("Low"));
+            
+            summaryTable.addCell(createStyledCell("Count", true));
+            summaryTable.addCell(createSeverityCell(String.valueOf(criticalCount), "CRITICAL"));
+            summaryTable.addCell(createSeverityCell(String.valueOf(highCount), "HIGH"));
+            summaryTable.addCell(createSeverityCell(String.valueOf(mediumCount), "MEDIUM"));
+            summaryTable.addCell(createSeverityCell(String.valueOf(lowCount), "LOW"));
+            
+            summaryTable.addCell(createStyledCell("Total Findings", true));
+            summaryTable.addCell(createStyledCell(String.valueOf(result.getFindings().size()), false));
             document.add(summaryTable);
             document.add(new Paragraph(" "));
 
-            document.add(new Paragraph("Findings")
-                    .setFontSize(14)
-                    .setBold());
+            // Detailed Findings Section
+            if (!result.getFindings().isEmpty()) {
+                document.add(new Paragraph("Security Findings")
+                        .setFontSize(14)
+                        .setBold()
+                        .setFontColor(new DeviceRgb(59, 130, 246))
+                        .setMarginTop(15)
+                        .setMarginBottom(8));
 
-            Table findingsTable = new Table(new float[]{2, 1, 2, 1, 2, 3});
-            findingsTable.addHeaderCell(new Cell().add(new Paragraph("Type").setBold()));
-            findingsTable.addHeaderCell(new Cell().add(new Paragraph("Severity").setBold()));
-            findingsTable.addHeaderCell(new Cell().add(new Paragraph("Summary").setBold()));
-            findingsTable.addHeaderCell(new Cell().add(new Paragraph("CVE").setBold()));
-            findingsTable.addHeaderCell(new Cell().add(new Paragraph("Remediation").setBold()));
-            findingsTable.addHeaderCell(new Cell().add(new Paragraph("File / Location").setBold()));
+                Table findingsTable = new Table(new float[]{1.5f, 1, 2.5f, 1.2f, 2, 2.8f});
+                findingsTable.addHeaderCell(createHeaderCell("Type"));
+                findingsTable.addHeaderCell(createHeaderCell("Severity"));
+                findingsTable.addHeaderCell(createHeaderCell("Summary"));
+                findingsTable.addHeaderCell(createHeaderCell("CVE ID"));
+                findingsTable.addHeaderCell(createHeaderCell("Remediation"));
+                findingsTable.addHeaderCell(createHeaderCell("File"));
 
-            for (ThreatFinding f : result.getFindings()) {
-                findingsTable.addCell(new Cell().add(new Paragraph(f.getType())));
-                findingsTable.addCell(new Cell().add(new Paragraph(f.getSeverity() == null ? "Unknown" : f.getSeverity())));
-                findingsTable.addCell(new Cell().add(new Paragraph(f.getSummary() == null ? "" : f.getSummary())));
-                findingsTable.addCell(new Cell().add(new Paragraph(f.getCveId() == null ? "" : f.getCveId())));
-                findingsTable.addCell(new Cell().add(new Paragraph(f.getRemediation() == null ? "" : f.getRemediation())));
-                findingsTable.addCell(new Cell().add(new Paragraph(f.getFile() == null ? "" : f.getFile())));
+                for (ThreatFinding f : result.getFindings()) {
+                    findingsTable.addCell(createStyledCell(f.getType(), false));
+                    findingsTable.addCell(createSeverityCell(f.getSeverity() == null ? "Unknown" : f.getSeverity(), f.getSeverity()));
+                    findingsTable.addCell(createStyledCell(f.getSummary() == null ? "" : f.getSummary(), false));
+                    findingsTable.addCell(createStyledCell(f.getCveId() == null ? "" : f.getCveId(), false));
+                    findingsTable.addCell(createStyledCell(f.getRemediation() == null ? "" : f.getRemediation(), false));
+                    findingsTable.addCell(createStyledCell(f.getFile() == null ? "" : f.getFile(), false));
+                }
+
+                document.add(findingsTable);
+                document.add(new Paragraph(" "));
             }
 
-            document.add(findingsTable);
-            document.add(new Paragraph(" "));
+            // Detected Technologies Section
+            if (!result.getTechnologies().isEmpty()) {
+                document.add(new Paragraph("Detected Technologies")
+                        .setFontSize(14)
+                        .setBold()
+                        .setFontColor(new DeviceRgb(59, 130, 246))
+                        .setMarginTop(15)
+                        .setMarginBottom(8));
 
-            document.add(new Paragraph("Detected Technologies")
-                    .setFontSize(14)
-                    .setBold());
-            Table techTable = new Table(new float[]{3, 4});
-            techTable.addHeaderCell(new Cell().add(new Paragraph("Technology").setBold()));
-            techTable.addHeaderCell(new Cell().add(new Paragraph("Source").setBold()));
-            for (TechnologyFinding t : result.getTechnologies()) {
-                techTable.addCell(new Cell().add(new Paragraph(t.getTechnology())));
-                techTable.addCell(new Cell().add(new Paragraph(t.getDetectedFrom() == null ? "" : t.getDetectedFrom())));
+                Table techTable = new Table(new float[]{3, 4});
+                techTable.addHeaderCell(createHeaderCell("Technology"));
+                techTable.addHeaderCell(createHeaderCell("Source"));
+
+                for (TechnologyFinding t : result.getTechnologies()) {
+                    techTable.addCell(createStyledCell(t.getTechnology(), false));
+                    techTable.addCell(createStyledCell(t.getDetectedFrom() == null ? "" : t.getDetectedFrom(), false));
+                }
+
+                document.add(techTable);
+                document.add(new Paragraph(" "));
             }
-            document.add(techTable);
-            document.add(new Paragraph(" "));
 
-            document.add(new Paragraph("Project Metadata")
-                    .setFontSize(14)
-                    .setBold());
-            Table metadataTable = new Table(new float[]{3, 5});
-            metadataTable.addCell(new Cell().add(new Paragraph("Project")));
-            metadataTable.addCell(new Cell().add(new Paragraph(result.getMetadata() == null ? "Unknown" : result.getMetadata().getProjectName())));
-            metadataTable.addCell(new Cell().add(new Paragraph("Source")));
-            metadataTable.addCell(new Cell().add(new Paragraph(result.getMetadata() == null ? "Unknown" : result.getMetadata().getSourceType())));
-            metadataTable.addCell(new Cell().add(new Paragraph("Repository")));
-            metadataTable.addCell(new Cell().add(new Paragraph(result.getMetadata() == null ? "Local Upload" : result.getMetadata().getRepositoryUrl())));
-            metadataTable.addCell(new Cell().add(new Paragraph("Total Files")));
-            metadataTable.addCell(new Cell().add(new Paragraph(result.getMetadata() == null ? "Unknown" : String.valueOf(result.getMetadata().getTotalFiles()))));
-            document.add(metadataTable);
+            // Project Metadata Section
+            if (result.getMetadata() != null) {
+                document.add(new Paragraph("Project Metadata")
+                        .setFontSize(14)
+                        .setBold()
+                        .setFontColor(new DeviceRgb(59, 130, 246))
+                        .setMarginTop(15)
+                        .setMarginBottom(8));
+
+                Table metadataTable = new Table(new float[]{3, 5});
+                metadataTable.addCell(createHeaderCell("Property"));
+                metadataTable.addCell(createHeaderCell("Value"));
+                
+                metadataTable.addCell(createStyledCell("Project Name", true));
+                metadataTable.addCell(createStyledCell(result.getMetadata().getProjectName() == null ? "Unknown" : result.getMetadata().getProjectName(), false));
+                metadataTable.addCell(createStyledCell("Source Type", true));
+                metadataTable.addCell(createStyledCell(result.getMetadata().getSourceType() == null ? "Unknown" : result.getMetadata().getSourceType(), false));
+                metadataTable.addCell(createStyledCell("Repository URL", true));
+                metadataTable.addCell(createStyledCell(result.getMetadata().getRepositoryUrl() == null ? "Local Upload" : result.getMetadata().getRepositoryUrl(), false));
+                metadataTable.addCell(createStyledCell("Total Files", true));
+                metadataTable.addCell(createStyledCell(String.valueOf(result.getMetadata().getTotalFiles()), false));
+
+                document.add(metadataTable);
+            }
+
+            // Footer
+            document.add(new Paragraph(" ").setMarginTop(30));
+            document.add(new Paragraph("ThreatAnalyzer v1.0 | Enterprise Security Scanning Platform")
+                    .setFontSize(10)
+                    .setTextAlignment(TextAlignment.CENTER)
+                    .setFontColor(ColorConstants.DARK_GRAY));
+            document.add(new Paragraph("Report generated for security analysis purposes")
+                    .setFontSize(9)
+                    .setTextAlignment(TextAlignment.CENTER)
+                    .setFontColor(ColorConstants.GRAY));
 
             document.close();
 
@@ -124,5 +206,36 @@ public class PdfReportGenerator {
         } catch (Exception e) {
             throw new RuntimeException("PDF generation failed", e);
         }
+    }
+
+    private static Cell createHeaderCell(String text) {
+        return new Cell()
+                .add(new Paragraph(text)
+                        .setBold()
+                        .setFontColor(ColorConstants.WHITE))
+                .setBackgroundColor(new DeviceRgb(59, 130, 246))
+                .setPadding(8);
+    }
+
+    private static Cell createStyledCell(String text, boolean isBold) {
+        Paragraph p = new Paragraph(text)
+                .setFontSize(10)
+                .setFontColor(ColorConstants.BLACK);
+        if (isBold) {
+            p.setBold();
+            p.setBackgroundColor(new DeviceRgb(240, 240, 240));
+        }
+        return new Cell().add(p).setPadding(6);
+    }
+
+    private static Cell createSeverityCell(String text, String severity) {
+        return new Cell()
+                .add(new Paragraph(text)
+                        .setBold()
+                        .setFontColor(ColorConstants.WHITE)
+                        .setFontSize(10))
+                .setBackgroundColor(getSeverityColor(severity))
+                .setPadding(6)
+                .setTextAlignment(TextAlignment.CENTER);
     }
 }
