@@ -64,6 +64,22 @@ function validateGithub() {
     return true;
 }
 
+function escapeHtml(text) {
+    return (text || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+function truncateText(text, maxLength = 60) {
+    if (!text) return '';
+    if (text.length <= maxLength) return escapeHtml(text);
+    const edge = Math.floor((maxLength - 3) / 2);
+    return `${escapeHtml(text.slice(0, edge))}...${escapeHtml(text.slice(text.length - edge))}`;
+}
+
 function showLoading(message) {
     document.getElementById('uploadSection').classList.add('hidden');
     document.getElementById('loading').classList.remove('hidden');
@@ -147,16 +163,19 @@ function showResults(result) {
     }).join('');
     resultsChart.innerHTML = chartBars;
 
-    const findingsRows = findings.map(finding => `
+    const findingsRows = findings.map(finding => {
+        const fileValue = finding.file || '';
+        return `
         <tr>
-            <td>${finding.type}</td>
-            <td><span class="badge ${finding.severity?.toLowerCase() || 'low'}">${finding.severity || 'UNKNOWN'}</span></td>
-            <td>${finding.summary || ''}</td>
-            <td>${finding.cveId || ''}</td>
-            <td>${finding.remediation || ''}</td>
-            <td>${finding.file || ''}</td>
+            <td>${escapeHtml(finding.type || '')}</td>
+            <td><span class="badge ${escapeHtml((finding.severity || 'low').toLowerCase())}">${escapeHtml(finding.severity || 'UNKNOWN')}</span></td>
+            <td>${escapeHtml(finding.summary || '')}</td>
+            <td>${escapeHtml(finding.cveId || '')}</td>
+            <td>${escapeHtml(finding.remediation || '')}</td>
+            <td class="path-cell" title="${escapeHtml(fileValue)}">${truncateText(fileValue, 60)}</td>
         </tr>
-    `).join('');
+    `;
+    }).join('');
 
     const technologiesRows = technologies.map(tech => `
         <tr>

@@ -676,6 +676,13 @@ select:focus {
     border-bottom: 1px solid var(--border);
 }
 
+.results-table td.path-cell {
+    max-width: 240px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
 .results-table thead th {
     background: rgba(59, 130, 246, 0.1);
     color: var(--text-primary);

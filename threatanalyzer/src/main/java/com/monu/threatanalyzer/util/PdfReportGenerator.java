@@ -134,7 +134,7 @@ public class PdfReportGenerator {
                     findingsTable.addCell(createStyledCell(f.getSummary() == null ? "" : f.getSummary(), false));
                     findingsTable.addCell(createStyledCell(f.getCveId() == null ? "" : f.getCveId(), false));
                     findingsTable.addCell(createStyledCell(f.getRemediation() == null ? "" : f.getRemediation(), false));
-                    findingsTable.addCell(createStyledCell(f.getFile() == null ? "" : f.getFile(), false));
+                    findingsTable.addCell(createStyledCell(truncateText(f.getFile(), 60), false));
                 }
 
                 document.add(findingsTable);
@@ -215,6 +215,17 @@ public class PdfReportGenerator {
                         .setFontColor(ColorConstants.WHITE))
                 .setBackgroundColor(new DeviceRgb(59, 130, 246))
                 .setPadding(8);
+    }
+
+    private static String truncateText(String text, int maxLength) {
+        if (text == null) {
+            return "";
+        }
+        if (text.length() <= maxLength) {
+            return text;
+        }
+        int edge = (maxLength - 3) / 2;
+        return text.substring(0, edge) + "..." + text.substring(text.length() - edge);
     }
 
     private static Cell createStyledCell(String text, boolean isBold) {
