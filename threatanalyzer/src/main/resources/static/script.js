@@ -44,6 +44,83 @@ function validateFile() {
     return true;
 }
 
+function handleFileSelection() {
+    const fileInput = document.getElementById('fileInput');
+    const uploadText = document.getElementById('fileUploadText');
+    const file = fileInput.files[0];
+
+    if (!file) {
+        uploadText.textContent = '📁 Click to upload or drag ZIP file here';
+        return;
+    }
+
+    uploadText.textContent = `Selected: ${file.name} (${(file.size / 1024 / 1024).toFixed(1)} MB)`;
+    validateFile();
+}
+
+function setStartButtonState(enabled) {
+    const button = document.getElementById('startAnalysisBtn');
+    button.disabled = !enabled;
+}
+
+function setLoadingProgress(progress) {
+    const progressFill = document.querySelector('.progress-fill');
+    if (progress === null || progress === undefined) {
+        progressFill.style.animation = 'progress 2s ease-in-out infinite';
+        progressFill.style.width = '100%';
+        return;
+    }
+
+    progressFill.style.animation = 'none';
+    progressFill.style.width = `${progress}%`;
+}
+
+function showLoading(message, progress = null) {
+    document.getElementById('uploadSection').classList.add('hidden');
+    document.getElementById('loading').classList.remove('hidden');
+    document.getElementById('resultsSection').classList.add('hidden');
+    document.getElementById('error').classList.add('hidden');
+    document.getElementById('loadingStatus').textContent = message;
+    setLoadingProgress(progress);
+    setStartButtonState(false);
+}
+
+async function uploadFileWithProgress(file) {
+    return new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        const formData = new FormData();
+        formData.append('file', file);
+
+        xhr.open('POST', '/api/upload');
+
+        xhr.upload.addEventListener('progress', (event) => {
+            if (event.lengthComputable) {
+                const percent = Math.round((event.loaded / event.total) * 100);
+                setLoadingProgress(percent);
+                document.getElementById('loadingStatus').textContent = `Uploading project... ${percent}%`;
+            } else {
+                setLoadingProgress(null);
+                document.getElementById('loadingStatus').textContent = 'Uploading project...';
+            }
+        });
+
+        xhr.onload = () => {
+            if (xhr.status >= 200 && xhr.status < 300) {
+                try {
+                    resolve(JSON.parse(xhr.responseText));
+                } catch (error) {
+                    reject(new Error('Upload response could not be parsed.'));
+                }
+            } else {
+                reject(new Error(`Upload failed: ${xhr.status}`));
+            }
+        };
+
+        xhr.onerror = () => reject(new Error('Upload failed due to a network error.'));
+        xhr.send(formData);
+    });
+}
+
 function validateGithub() {
     const githubInput = document.getElementById('githubInput');
     const githubError = document.getElementById('githubError');
@@ -64,12 +141,30 @@ function validateGithub() {
     return true;
 }
 
-function showLoading(message) {
+function escapeHtml(text) {
+    return (text || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+function truncateText(text, maxLength = 60) {
+    if (!text) return '';
+    if (text.length <= maxLength) return escapeHtml(text);
+    const edge = Math.floor((maxLength - 3) / 2);
+    return `${escapeHtml(text.slice(0, edge))}...${escapeHtml(text.slice(text.length - edge))}`;
+}
+
+function showLoading(message, progress = null) {
     document.getElementById('uploadSection').classList.add('hidden');
     document.getElementById('loading').classList.remove('hidden');
     document.getElementById('resultsSection').classList.add('hidden');
     document.getElementById('error').classList.add('hidden');
     document.getElementById('loadingStatus').textContent = message;
+    setLoadingProgress(progress);
+    setStartButtonState(false);
 }
 
 function showResults(result) {
@@ -147,16 +242,19 @@ function showResults(result) {
     }).join('');
     resultsChart.innerHTML = chartBars;
 
-    const findingsRows = findings.map(finding => `
+    const findingsRows = findings.map(finding => {
+        const fileValue = finding.file || '';
+        return `
         <tr>
-            <td>${finding.type}</td>
-            <td><span class="badge ${finding.severity?.toLowerCase() || 'low'}">${finding.severity || 'UNKNOWN'}</span></td>
-            <td>${finding.summary || ''}</td>
-            <td>${finding.cveId || ''}</td>
-            <td>${finding.remediation || ''}</td>
-            <td>${finding.file || ''}</td>
+            <td>${escapeHtml(finding.type || '')}</td>
+            <td><span class="badge ${escapeHtml((finding.severity || 'low').toLowerCase())}">${escapeHtml(finding.severity || 'UNKNOWN')}</span></td>
+            <td>${escapeHtml(finding.summary || '')}</td>
+            <td>${escapeHtml(finding.cveId || '')}</td>
+            <td>${escapeHtml(finding.remediation || '')}</td>
+            <td class="path-cell" title="${escapeHtml(fileValue)}">${truncateText(fileValue, 60)}</td>
         </tr>
-    `).join('');
+    `;
+    }).join('');
 
     const technologiesRows = technologies.map(tech => `
         <tr>
@@ -244,6 +342,7 @@ function showError(message) {
     document.getElementById('uploadSection').classList.remove('hidden');
     document.getElementById('error').classList.remove('hidden');
     document.getElementById('errorMessage').textContent = message;
+    setStartButtonState(true);
 }
 
 function resetAnalysis() {
@@ -253,8 +352,10 @@ function resetAnalysis() {
     document.getElementById('uploadSection').classList.remove('hidden');
     document.getElementById('fileInput').value = '';
     document.getElementById('githubInput').value = '';
+    document.getElementById('fileUploadText').textContent = '📁 Click to upload or drag ZIP file here';
     clearErrors();
     window.currentScanId = null;
+    setStartButtonState(true);
 }
 
 async function analyze() {
@@ -281,29 +382,25 @@ async function analyze() {
         return;
     }
 
-    showLoading('Uploading and scanning your project...');
+    showLoading('Uploading your project...', 0);
 
     try {
-        let response;
+        let uploadData;
 
         if (uploadType === 'file') {
-            const formData = new FormData();
-            formData.append('file', fileInput.files[0]);
-            response = await fetch('/api/upload', { method: 'POST', body: formData });
+            uploadData = await uploadFileWithProgress(fileInput.files[0]);
         } else {
             const formData = new URLSearchParams();
             formData.append('repoUrl', github);
-            response = await fetch('/api/upload/github', { method: 'POST', body: formData });
+            const response = await fetch('/api/upload/github', { method: 'POST', body: formData });
+            if (!response.ok) {
+                throw new Error(`Upload failed: ${response.status}`);
+            }
+            uploadData = await response.json();
         }
 
-        if (!response.ok) {
-            throw new Error(`Upload failed: ${response.status}`);
-        }
-
-        const uploadData = await response.json();
         window.currentScanId = uploadData.scanId;
-
-        showLoading('Processing scan results...');
+        showLoading('Processing scan results...', null);
 
         const reportResponse = await fetch(`/api/scan/${uploadData.scanId}/report`);
         if (!reportResponse.ok) {

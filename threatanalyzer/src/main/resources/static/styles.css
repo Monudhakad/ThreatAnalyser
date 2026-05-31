@@ -226,9 +226,14 @@ body {
 }
 
 .file-upload::after {
-    content: "📁 Click to upload or drag ZIP file here";
-    display: block;
+    display: none;
+}
+
+.file-upload-text {
     color: var(--text-secondary);
+    font-size: 0.95rem;
+    margin-bottom: 0.8rem;
+    word-break: break-word;
 }
 
 /* INPUTS */
@@ -334,6 +339,13 @@ select:focus {
 
 .btn-primary:active {
     transform: translateY(0);
+}
+
+.btn:disabled,
+.btn[disabled] {
+    opacity: 0.65;
+    cursor: not-allowed;
+    transform: none;
 }
 
 .btn-secondary {
@@ -676,6 +688,13 @@ select:focus {
     border-bottom: 1px solid var(--border);
 }
 
+.results-table td.path-cell {
+    max-width: 240px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
 .results-table thead th {
     background: rgba(59, 130, 246, 0.1);
     color: var(--text-primary);
@@ -894,4 +913,69 @@ select:focus {
         padding: 0.7rem 1.4rem;
         font-size: 0.9rem;
     }
+}
+
+/* ============================================
+   BOOTSTRAP DASHBOARD CARDS
+   ============================================ */
+
+.card {
+    background-color: var(--bg-card);
+    border-color: var(--border);
+    color: var(--text-primary);
+}
+
+.card-body {
+    background-color: var(--bg-card);
+}
+
+.card.border-danger {
+    border-color: var(--danger) !important;
+}
+
+.card.border-warning {
+    border-color: var(--warning) !important;
+}
+
+.card.border-info {
+    border-color: var(--primary) !important;
+}
+
+.card.border-success {
+    border-color: var(--success) !important;
+}
+
+.text-danger {
+    color: var(--danger) !important;
+}
+
+.text-warning {
+    color: var(--warning) !important;
+}
+
+.text-info {
+    color: var(--primary) !important;
+}
+
+.text-success {
+    color: var(--success) !important;
+}
+
+.font-weight-bold {
+    font-weight: 700 !important;
+}
+
+.h-100 {
+    height: 100% !important;
+}
+
+.shadow-sm {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075) !important;
+}
+
+.fa-skull-crossbones, 
+.fa-exclamation-triangle, 
+.fa-microchip, 
+.fa-chart-pie {
+    font-size: 2rem;
 }
