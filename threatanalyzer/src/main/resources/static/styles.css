@@ -226,9 +226,14 @@ body {
 }
 
 .file-upload::after {
-    content: "📁 Click to upload or drag ZIP file here";
-    display: block;
+    display: none;
+}
+
+.file-upload-text {
     color: var(--text-secondary);
+    font-size: 0.95rem;
+    margin-bottom: 0.8rem;
+    word-break: break-word;
 }
 
 /* INPUTS */
@@ -334,6 +339,13 @@ select:focus {
 
 .btn-primary:active {
     transform: translateY(0);
+}
+
+.btn:disabled,
+.btn[disabled] {
+    opacity: 0.65;
+    cursor: not-allowed;
+    transform: none;
 }
 
 .btn-secondary {
