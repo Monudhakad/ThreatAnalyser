@@ -157,6 +157,11 @@ function truncateText(text, maxLength = 60) {
     return `${escapeHtml(text.slice(0, edge))}...${escapeHtml(text.slice(text.length - edge))}`;
 }
 
+function formatPathForDisplay(text) {
+    if (!text) return '';
+    return escapeHtml(text).replace(/(\/|\\)/g, '$1<wbr>');
+}
+
 function showLoading(message, progress = null) {
     document.getElementById('uploadSection').classList.add('hidden');
     document.getElementById('loading').classList.remove('hidden');
@@ -248,10 +253,8 @@ function showResults(result) {
         <tr>
             <td>${escapeHtml(finding.type || '')}</td>
             <td><span class="badge ${escapeHtml((finding.severity || 'low').toLowerCase())}">${escapeHtml(finding.severity || 'UNKNOWN')}</span></td>
-            <td>${escapeHtml(finding.summary || '')}</td>
-            <td>${escapeHtml(finding.cveId || '')}</td>
-            <td>${escapeHtml(finding.remediation || '')}</td>
-            <td class="path-cell" title="${escapeHtml(fileValue)}">${truncateText(fileValue, 60)}</td>
+            <td class="remediation-cell">${escapeHtml(finding.remediation || '')}</td>
+            <td class="path-cell" title="${escapeHtml(fileValue)}">${formatPathForDisplay(fileValue)}</td>
         </tr>
     `;
     }).join('');
@@ -268,12 +271,16 @@ function showResults(result) {
             <h4>Security Findings</h4>
             ${findingsRows ? `
                 <table class="results-table">
+                    <colgroup>
+                        <col style="width: 15%;">
+                        <col style="width: 15%;">
+                        <col style="width: 20%;">
+                        <col style="width: 50%;">
+                    </colgroup>
                     <thead>
                         <tr>
                             <th>Type</th>
                             <th>Severity</th>
-                            <th>Summary</th>
-                            <th>CVE</th>
                             <th>Remediation</th>
                             <th>File</th>
                         </tr>

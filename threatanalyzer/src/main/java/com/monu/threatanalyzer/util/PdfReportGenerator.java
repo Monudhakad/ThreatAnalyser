@@ -120,21 +120,17 @@ public class PdfReportGenerator {
                         .setMarginTop(15)
                         .setMarginBottom(8));
 
-                Table findingsTable = new Table(new float[]{1.5f, 1, 2.5f, 1.2f, 2, 2.8f});
+                Table findingsTable = new Table(new float[]{1.4f, 1.1f, 2.8f, 5.7f});
                 findingsTable.addHeaderCell(createHeaderCell("Type"));
                 findingsTable.addHeaderCell(createHeaderCell("Severity"));
-                findingsTable.addHeaderCell(createHeaderCell("Summary"));
-                findingsTable.addHeaderCell(createHeaderCell("CVE ID"));
                 findingsTable.addHeaderCell(createHeaderCell("Remediation"));
                 findingsTable.addHeaderCell(createHeaderCell("File"));
 
                 for (ThreatFinding f : result.getFindings()) {
                     findingsTable.addCell(createStyledCell(f.getType(), false));
                     findingsTable.addCell(createSeverityCell(f.getSeverity() == null ? "Unknown" : f.getSeverity(), f.getSeverity()));
-                    findingsTable.addCell(createStyledCell(f.getSummary() == null ? "" : f.getSummary(), false));
-                    findingsTable.addCell(createStyledCell(f.getCveId() == null ? "" : f.getCveId(), false));
                     findingsTable.addCell(createStyledCell(f.getRemediation() == null ? "" : f.getRemediation(), false));
-                    findingsTable.addCell(createStyledCell(truncateText(f.getFile(), 60), false));
+                    findingsTable.addCell(createStyledCell(formatFilePathForPdf(f.getFile()), false));
                 }
 
                 document.add(findingsTable);
@@ -226,6 +222,14 @@ public class PdfReportGenerator {
         }
         int edge = (maxLength - 3) / 2;
         return text.substring(0, edge) + "..." + text.substring(text.length() - edge);
+    }
+
+    private static String formatFilePathForPdf(String text) {
+        if (text == null) {
+            return "";
+        }
+        // Break long file paths at path separators to avoid overflow in the PDF table cell.
+        return text.replace("\\", "\\\n").replace("/", "/\n");
     }
 
     private static Cell createStyledCell(String text, boolean isBold) {
